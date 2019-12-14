@@ -9,6 +9,7 @@ const initialColor = {
 const ColorList = ({ colors, updateColors, props }) => {
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
+  const [colorToAdd, setColorToAdd] = useState(initialColor);
 
   const editColor = color => {
     setEditing(true);
@@ -33,15 +34,37 @@ const ColorList = ({ colors, updateColors, props }) => {
             (a, b) => parseFloat(a.id) - parseFloat(b.id)
           )
         );
+        setColorToEdit(initialColor);
         // props.history.push('/');
         props.history.push('/protected');
       })
       .catch(err => console.log(err));
   };
 
+  const addColor = e => {
+    e.preventDefault();
+    axiosWithAuth()
+      .post(`http://localhost:5000/api/colors`, colorToAdd)
+      .then(res => {
+        console.log(res);
+        updateColors([...colors, colorToAdd])
+        setColorToAdd(initialColor)
+      })
+      .catch(err => console.log(err));
+    // let maxId = 0;
+    // console.log(colors);
+    // const largestId = colors.reduce(color => {
+    //   if (color.id > maxId) {
+    //     maxId = color.id;
+    //   }
+    // });
+    // console.log('LargestID', largestId);
+  };
+
   const deleteColor = color => {
     // make a delete request to delete this color
     console.log('Deleted Color', color);
+    updateColors([...colors])
     axiosWithAuth()
       .delete(`http://localhost:5000/api/colors/${color.id}`)
       .then(res => {
@@ -49,8 +72,8 @@ const ColorList = ({ colors, updateColors, props }) => {
         const filterDeletedColor = colors.filter(
           color => color.id !== res.data
         );
-        console.log('ColorList filterDeletedColor', filterDeletedColor)
- 
+        console.log('ColorList filterDeletedColor', filterDeletedColor);
+
         updateColors([...filterDeletedColor]);
         // props.history.push('/');
         props.history.push('/protected');
@@ -112,8 +135,36 @@ const ColorList = ({ colors, updateColors, props }) => {
           </div>
         </form>
       )}
-      <div className="spacer" />
+      {/* <div className="spacer" /> */}
       {/* stretch - build another form here to add a color */}
+      <form onSubmit={addColor}>
+        <legend>add color</legend>
+        <label>
+          color name:
+          <input
+            onChange={e =>
+              setColorToAdd({ ...colorToAdd, color: e.target.value })
+            }
+            value={colorToAdd.color}
+          />
+        </label>
+        <label>
+          hex code:
+          <input
+            onChange={e =>
+              setColorToAdd({
+                ...colorToAdd,
+                code: { hex: e.target.value }
+              })
+            }
+            value={colorToAdd.code.hex}
+          />
+        </label>
+        <div className="button-row">
+          <button type="submit">add</button>
+          {/* <button onClick={() => setEditing(false)}>cancel</button> */}
+        </div>
+      </form>
     </div>
   );
 };
